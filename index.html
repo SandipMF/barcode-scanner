@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Fast barcode scanner PWA - scan barcodes instantly with your camera">
+  <title>Barcode Scanner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Barcode Scanner</h1>
+      <button type="button" class="btn-icon" id="btn-install" aria-label="Install app" title="Install app" hidden>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+    </header>
+
+    <main class="main">
+      <div class="camera-required-https" id="https-banner" hidden>
+        <p><strong>Camera needs a secure connection (HTTPS)</strong></p>
+        <p>On your phone, open this app using an <strong>HTTPS</strong> URL (see README for tunnel options) or deploy it to a hosting with HTTPS.</p>
+      </div>
+      <div class="scanner-wrap" id="scanner-wrap">
+        <div class="camera-container" id="camera-container">
+          <video id="video" playsinline muted autoplay></video>
+          <canvas id="canvas" hidden></canvas>
+          <div class="scan-line" aria-hidden="true"></div>
+          <div class="scan-frame" aria-hidden="true"></div>
+        </div>
+        <p class="camera-hint" id="camera-hint">Point your camera at a barcode</p>
+      </div>
+
+      <div class="results-panel" id="results-panel">
+        <h2>Last scan</h2>
+        <div class="result-value" id="result-value">—</div>
+        <div class="result-format" id="result-format"></div>
+        <ul class="history" id="history"></ul>
+        <button type="button" class="btn btn-ghost" id="btn-clear-history">Clear history</button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <button type="button" class="btn btn-primary" id="btn-toggle">
+        <span id="btn-toggle-text">Start scanning</span>
+      </button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
