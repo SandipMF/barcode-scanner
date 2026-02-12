@@ -29,7 +29,7 @@
       </div>
       <div class="scanner-wrap" id="scanner-wrap">
         <div class="camera-container" id="camera-container">
-          <video id="video" playsinline muted autoplay></video>
+          <video id="video" playsinline webkit-playsinline muted autoplay></video>
           <canvas id="canvas" hidden></canvas>
           <div class="scan-line" aria-hidden="true"></div>
           <div class="scan-frame" aria-hidden="true"></div>
@@ -56,6 +56,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

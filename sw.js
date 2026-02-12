@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barcode-scanner-v1';
+const CACHE_NAME = 'barcode-scanner-v3';
 const URLS = [
   './',
   './index.html',
@@ -21,14 +21,15 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.url.startsWith(self.location.origin) && e.request.method === 'GET') {
+    // Network-first strategy for better updates
     e.respondWith(
-      caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
+      fetch(e.request).then((res) => {
         const clone = res.clone();
-        if (res.status === 200 && (e.request.url.endsWith('.html') || e.request.url.endsWith('.css') || e.request.url.endsWith('.js') || e.request.url.endsWith('.json'))) {
+        if (res.status === 200) {
           caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
         }
         return res;
-      }))
+      }).catch(() => caches.match(e.request))
     );
   }
 });
