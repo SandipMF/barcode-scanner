@@ -38,9 +38,14 @@
       </div>
 
       <div class="results-panel" id="results-panel">
-        <h2>Last scan</h2>
+        <h2>Scanned Result</h2>
         <div class="result-value" id="result-value">—</div>
         <div class="result-format" id="result-format"></div>
+        <div class="result-actions" id="result-actions" hidden>
+          <button type="button" class="btn btn-primary" id="btn-save">Save to History</button>
+          <button type="button" class="btn btn-secondary" id="btn-copy">Copy</button>
+        </div>
+        <h3 class="history-title">History</h3>
         <ul class="history" id="history"></ul>
         <button type="button" class="btn btn-ghost" id="btn-clear-history">Clear history</button>
       </div>
