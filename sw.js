@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barcode-scanner-v5';
+const CACHE_NAME = 'barcode-scanner-v6';
 const URLS = [
   './',
   './index.html',
