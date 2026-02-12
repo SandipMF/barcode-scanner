@@ -19,9 +19,11 @@
   let stream = null;
   let scanning = false;
   let scanAnimationId = null;
+  let quaggaIntervalId = null;
   let lastResult = '';
   let lastResultTime = 0;
   const DEBOUNCE_MS = 1500;
+  const QUAGGA_INTERVAL_MS = 400;
 
   const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
   let barcodeDetector = null;
@@ -132,58 +134,51 @@
     });
   }
 
+  function runQuaggaDecode() {
+    if (!scanning || !stream || typeof Quagga === 'undefined') return;
+    if (!VIDEO.videoWidth) return;
+    const w = VIDEO.videoWidth;
+    const h = VIDEO.videoHeight;
+    CANVAS.width = w;
+    CANVAS.height = h;
+    const ctx = CANVAS.getContext('2d');
+    ctx.drawImage(VIDEO, 0, 0, w, h);
+    try {
+      const dataUrl = CANVAS.toDataURL('image/jpeg', 0.8);
+      Quagga.decodeSingle(
+        {
+          src: dataUrl,
+          locator: { patchSize: 'medium', halfSample: true },
+          numOfWorkers: 0,
+          decoder: { readers: ['ean_reader', 'ean_8_reader', 'upc_reader', 'code_128_reader', 'code_39_reader'] }
+        },
+        (err, result) => {
+          if (!scanning) return;
+          if (err || !result) return;
+          const value = result?.codeResult?.code;
+          const format = result?.codeResult?.format?.name;
+          if (!value) return;
+          const now = Date.now();
+          if (now - lastResultTime > DEBOUNCE_MS) {
+            lastResultTime = now;
+            lastResult = value;
+            setResult(value, format);
+            showToast('Barcode scanned', 'success');
+          }
+        }
+      );
+    } catch (_) {}
+  }
+
   function startQuagga() {
     if (typeof Quagga === 'undefined') return;
-    Quagga.init(
-      {
-        inputStream: {
-          name: 'Live',
-          type: 'LiveStream',
-          target: CAMERA_CONTAINER,
-          constraints: {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        },
-        locator: {
-          patchSize: 'medium',
-          halfSample: true
-        },
-        numOfWorkers: 2,
-        decoder: {
-          readers: ['ean_reader', 'ean_8_reader', 'upc_reader', 'code_128_reader', 'code_39_reader']
-        },
-        frequency: 10
-      },
-      (err) => {
-        if (err) {
-          console.warn('Quagga init error', err);
-          showToast('Camera error: ' + (err.message || 'Could not start'), 'error');
-          stopScanning();
-          return;
-        }
-        Quagga.start();
-      }
-    );
-    Quagga.onDetected((result) => {
-      const value = result?.codeResult?.code;
-      const format = result?.codeResult?.format?.name;
-      if (!value) return;
-      const now = Date.now();
-      if (now - lastResultTime > DEBOUNCE_MS) {
-        lastResultTime = now;
-        lastResult = value;
-        setResult(value, format);
-        showToast('Barcode scanned', 'success');
-      }
-    });
+    quaggaIntervalId = setInterval(runQuaggaDecode, QUAGGA_INTERVAL_MS);
   }
 
   function stopQuagga() {
-    if (typeof Quagga !== 'undefined') {
-      Quagga.offDetected();
-      Quagga.stop();
+    if (quaggaIntervalId != null) {
+      clearInterval(quaggaIntervalId);
+      quaggaIntervalId = null;
     }
   }
 
@@ -215,16 +210,23 @@
     }
 
     VIDEO.srcObject = stream;
+    VIDEO.muted = true;
+    VIDEO.playsInline = true;
     scanning = true;
     BTN_TOGGLE.classList.add('scanning');
     BTN_TOGGLE_TEXT.textContent = 'Stop scanning';
+
+    VIDEO.play().catch(function (e) {
+      console.warn('Video play failed', e);
+      showToast('Camera preview failed. Try again.', 'error');
+    });
 
     if (barcodeDetector) {
       VIDEO.style.display = 'block';
       CANVAS.hidden = false;
       tickNative();
     } else {
-      VIDEO.style.display = 'none';
+      VIDEO.style.display = 'block';
       startQuagga();
     }
   }
