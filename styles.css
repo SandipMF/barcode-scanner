@@ -159,17 +159,27 @@ body {
     var(--accent) 80%,
     transparent
   );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.scan-line.active {
   opacity: 0.9;
   animation: scan 2s ease-in-out infinite;
-  pointer-events: none;
 }
 
 .scan-frame {
   position: absolute;
   inset: 15%;
-  border: 2px solid rgba(56, 189, 248, 0.5);
+  border: 2px solid rgba(56, 189, 248, 0.3);
   border-radius: var(--radius-sm);
   pointer-events: none;
+  transition: border-color 0.3s;
+}
+
+.scan-frame.active {
+  border-color: rgba(56, 189, 248, 0.7);
 }
 
 @keyframes scan {
@@ -225,6 +235,36 @@ body {
   font-size: 0.8125rem;
   color: var(--text-muted);
   margin-bottom: 1rem;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-actions .btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-secondary {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.history-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .history {

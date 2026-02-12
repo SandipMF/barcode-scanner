@@ -10,8 +10,15 @@
   const BTN_TOGGLE = document.getElementById('btn-toggle');
   const BTN_TOGGLE_TEXT = document.getElementById('btn-toggle-text');
   const BTN_CLEAR = document.getElementById('btn-clear-history');
+  const BTN_SAVE = document.getElementById('btn-save');
+  const BTN_COPY = document.getElementById('btn-copy');
+  const RESULT_ACTIONS = document.getElementById('result-actions');
   const BTN_INSTALL = document.getElementById('btn-install');
   const TOAST = document.getElementById('toast');
+  const SCAN_LINE = document.querySelector('.scan-line');
+  const SCAN_FRAME = document.querySelector('.scan-frame');
+
+  let pendingResult = null; // Store result before saving to history
 
   const HISTORY_KEY = 'barcode-scanner-history';
   const HISTORY_MAX = 50;
@@ -21,8 +28,6 @@
   let scanAnimationId = null;
   let quaggaIntervalId = null;
   let lastResult = '';
-  let lastResultTime = 0;
-  const DEBOUNCE_MS = 1500;
   const SCAN_INTERVAL_MS = 150;
 
   const hasBarcodeDetector = typeof BarcodeDetector !== 'undefined';
@@ -87,7 +92,31 @@
     RESULT_VALUE.textContent = value || '—';
     RESULT_FORMAT.textContent = format ? String(format) : '';
     if (value) {
-      addToHistory(value, format);
+      pendingResult = { value, format };
+      RESULT_ACTIONS.hidden = false;
+    } else {
+      pendingResult = null;
+      RESULT_ACTIONS.hidden = true;
+    }
+  }
+
+  function saveToHistory() {
+    if (pendingResult) {
+      addToHistory(pendingResult.value, pendingResult.format);
+      showToast('Saved to history', 'success');
+      pendingResult = null;
+      RESULT_ACTIONS.hidden = true;
+    }
+  }
+
+  function copyResult() {
+    const text = RESULT_VALUE.textContent;
+    if (text && text !== '—') {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Copied to clipboard', 'success');
+      }).catch(function() {
+        showToast('Failed to copy', 'error');
+      });
     }
   }
 
@@ -130,17 +159,15 @@
 
   function handleDetection(value, format) {
     if (!value) return;
-    const now = Date.now();
-    if (now - lastResultTime > DEBOUNCE_MS) {
-      lastResultTime = now;
-      lastResult = value;
-      setResult(value, format);
-      showToast('Barcode scanned!', 'success');
-      // Vibrate on success if supported
-      if (navigator.vibrate) {
-        navigator.vibrate(100);
-      }
+    lastResult = value;
+    setResult(value, format);
+    showToast('Barcode detected!', 'success');
+    // Vibrate on success if supported
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
     }
+    // Stop scanning after detection
+    stopScanning();
   }
 
   function scanWithJsQR(imageData) {
@@ -276,6 +303,8 @@
     scanning = true;
     BTN_TOGGLE.classList.add('scanning');
     BTN_TOGGLE_TEXT.textContent = 'Stop scanning';
+    SCAN_LINE.classList.add('active');
+    SCAN_FRAME.classList.add('active');
 
     // iOS requires waiting for loadedmetadata before play()
     const onCanPlay = function () {
@@ -306,6 +335,8 @@
 
   function stopScanning() {
     scanning = false;
+    SCAN_LINE.classList.remove('active');
+    SCAN_FRAME.classList.remove('active');
     if (scanAnimationId != null) {
       cancelAnimationFrame(scanAnimationId);
       scanAnimationId = null;
@@ -329,6 +360,8 @@
   }
 
   BTN_TOGGLE.addEventListener('click', toggleScanning);
+  BTN_SAVE.addEventListener('click', saveToHistory);
+  BTN_COPY.addEventListener('click', copyResult);
   BTN_CLEAR.addEventListener('click', () => {
     setHistory([]);
     renderHistory();
